@@ -1,6 +1,8 @@
 import json
 import pandas as pd
 from bs4 import BeautifulSoup
+from datetime import datetime
+from collections import Counter
 
 import os
 from os.path import isfile, isdir, join, exists
@@ -157,6 +159,38 @@ class ExtractData(object):
 		videos_df.to_csv("DataCSV/watch_history_video_stats.csv", sep=',', index=False)
 		print("CSV file saved to DataCSV/watch_history_video_stats.csv")
 
+	def get_daily_stats_csv(self):
+		if not exists("DataJSON/watch_history.json"):
+			history_list = self.get_watch_history_json()
+		else:
+			history_list = self.load_json("DataJSON/watch_history.json")
+
+		history_df = pd.DataFrame(history_list)
+		timestamps = history_df["timestamp"].tolist()
+
+		dates_list = []
+		for timestamp in timestamps:
+			try:
+				datetime_obj = datetime.strptime(timestamp, '%b %d, %Y, %I:%M:%S %p %Z')
+				dates_list.append(datetime_obj.strftime('%b %d, %Y'))
+			except:
+				timestamp_split = timestamp.split('pm')
+				if len(timestamp_split) != 2:
+					timestamp_split = timestamp_split[0].split('am')
+				datetime_obj = datetime.strptime(timestamp_split[1], '%b %d, %Y, %I:%M:%S %p %Z')
+				dates_list.append(datetime_obj.strftime('%b %d, %Y'))
+		dates_dict = Counter(dates_list)
+
+		days_list = []
+		for key, val in dates_dict.items():
+			days_list.append({
+				'date': key,
+				'videos_count': val
+			})
+		days_df = pd.DataFrame(days_list)
+		days_df.to_csv("DataCSV/day_stats.csv", sep=',', index=False)
+		print("CSV file saved to DataCSV/day_stats.csv")
+
 	def auto(self):
 		if not exists("DataJSON/watch_history.json"):
 			self.get_watch_history_json()
@@ -167,4 +201,4 @@ class ExtractData(object):
 
 if __name__ == '__main__':
 	data_obj = ExtractData(dir_path="YouTubeData")
-	data_obj.auto()
+	data_obj.get_daily_stats_csv()
