@@ -26,6 +26,9 @@ class ExtractData(object):
 		if not exists("DataJSON"):
 			os.mkdir("DataJSON")
 
+		if not exists("DataCSV"):
+			os.mkdir("DataCSV")
+
 		self._dirs = [f for f in os.listdir(dir_path) if isdir(join(dir_path, f))]
 
 	def load_json(self, filename):
