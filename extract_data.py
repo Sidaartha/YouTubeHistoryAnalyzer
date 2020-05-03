@@ -54,13 +54,21 @@ class ExtractData(object):
 				try:
 					divs = entity.findAll('div')
 					links = divs[1].findAll('a')
+					timestamp = divs[1].text.split(links[1].text)[-1]
+					if len(timestamp) > 30:
+						if len(timestamp.split('am')) != 2:
+							timestamp = timestamp.split('pm')[1]
+						else:
+							timestamp = timestamp.split('am')[1]
+					date = datetime.strptime(timestamp, '%b %d, %Y, %I:%M:%S %p %Z').strftime('%b %d, %Y')
 					entity_dict = {
 						'source': divs[0].p.text,
 						'video_title':links[0].text,
 						'video_url':links[0]['href'],
 						'channel_title':links[1].text,
 						'channel_url':links[1]['href'],
-						'timestamp': divs[1].text.split(links[1].text)[-1]
+						'timestamp': timestamp,
+						'date': date
 					}
 					history_list.append(entity_dict)
 				except:
@@ -170,15 +178,8 @@ class ExtractData(object):
 
 		dates_list = []
 		for timestamp in timestamps:
-			try:
-				datetime_obj = datetime.strptime(timestamp, '%b %d, %Y, %I:%M:%S %p %Z')
-				dates_list.append(datetime_obj.strftime('%b %d, %Y'))
-			except:
-				timestamp_split = timestamp.split('pm')
-				if len(timestamp_split) != 2:
-					timestamp_split = timestamp_split[0].split('am')
-				datetime_obj = datetime.strptime(timestamp_split[1], '%b %d, %Y, %I:%M:%S %p %Z')
-				dates_list.append(datetime_obj.strftime('%b %d, %Y'))
+			datetime_obj = datetime.strptime(timestamp, '%b %d, %Y, %I:%M:%S %p %Z')
+			dates_list.append(datetime_obj.strftime('%b %d, %Y'))
 		dates_dict = Counter(dates_list)
 
 		days_list = []
@@ -201,4 +202,4 @@ class ExtractData(object):
 
 if __name__ == '__main__':
 	data_obj = ExtractData(dir_path="YouTubeData")
-	data_obj.get_daily_stats_csv()
+	data_obj.auto()
